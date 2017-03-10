@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.push File.expand_path('../../lib', __FILE__)
+require 'apk_analyzer'
+require 'optparse'
+require 'json'
+
+options = {
+  apk_path: nil,
+  manifest: false
+}
+
+parser = OptionParser.new do |opts|
+  opts.on('-f', '--file FILE PATH', 'Apk file path') do |file_path|
+    options[:apk_path] = file_path
+  end
+
+  opts.on('-m', '--manifest', 'Collects Manifest.xml informations') do
+    options[:manifest] = true
+  end
+end
+
+parser.parse!
+raise 'File not specified' if options[:apk_path].nil?
+apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path(options[:apk_path]))
+apk_analyzer.open
+apk_data = {}
+apk_data[:manifest_info] = apk_analyzer.collect_manifest_info if options[:manifest]
+puts JSON.pretty_generate(apk_data)
