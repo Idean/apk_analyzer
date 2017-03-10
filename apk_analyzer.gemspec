@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Kassang Konzi"]
   spec.email         = ["kassang.konzi@backelite.com"]
 
-  spec.summary       = %q{TODO: Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
+  spec.summary       = %q{Android .apk analyzer}
+  spec.description   = %q{The aim of this gem is to extract some data from android apk files. It can be used with CLI}
   spec.homepage      = "TODO: Put your gem's website or public repo URL here."
   spec.license       = "MIT"
 
@@ -29,6 +29,10 @@ Gem::Specification.new do |spec|
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+
+  spec.add_runtime_dependency 'apktools', '~>0.7.1'
+  spec.add_runtime_dependency 'ruby_apk', '~>0.7'
+  spec.add_runtime_dependency 'nokogiri', '~>1.7'
 
   spec.add_development_dependency "bundler", "~> 1.14"
   spec.add_development_dependency "rake", "~> 10.0"
