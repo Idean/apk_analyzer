@@ -31,7 +31,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency 'apktools', '~>0.7.1'
-  spec.add_runtime_dependency 'ruby_apk', '~>0.7'
   spec.add_runtime_dependency 'nokogiri', '~>1.7'
 
   spec.add_development_dependency "bundler", "~> 1.14"
