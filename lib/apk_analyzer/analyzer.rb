@@ -136,31 +136,14 @@ module ApkAnalyzer
       value == FALSE ? 'false' : 'true'
     end
 
-    def open_gl_version_conv(value)
+    def opengl_version_conv(value)
       value_copy = value.dup
       value_copy = value_copy.gsub(/\D|0/, '')
       value_copy.chars.join('.')
       value_copy += '.0' if value.chars.last == '0'
-      value_copy
-=begin
-      opengl = 'OpenGL ES '
-      opengl +
-              case value
-              when '0x10000'
-                '1.0'
-              when '0x10001'
-                '1.1'
-              when '0x20000'
-                '2.0'
-              when '0x20001'
-                '2.1'
-              when '0x30000'
-                '3.0'
-              when '0x30001'
-                '3.1'
-              end
-=end
+      "Open GL #{value_copy}"
     end
+
     def find_file_in_apk(file_name)
       begin
         file_path_in_apk = nil
