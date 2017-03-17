@@ -97,6 +97,8 @@ module ApkAnalyzer
         value = bool_conv(value) if value == '0x0' || value == '0xffffffff'
         application_content[application_attribute.name.to_sym] = value
       end
+      application_id = manifest_xml.xpath('//manifest/@package')
+      application_content[:application_id] = application_id[0].value unless application_id.empty?
       application_content
     end
 
