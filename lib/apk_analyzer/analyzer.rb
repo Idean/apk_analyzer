@@ -89,10 +89,14 @@ module ApkAnalyzer
 
     def collect_application_info(manifest_xml)
       application_content = {}
-      application_name = manifest_xml.xpath('//application/@android:name')
-      application_content[:application_name] = application_name[0].value unless application_name.empty?
-      application_id = manifest_xml.xpath('//manifest/@package')
-      application_content[:application_id] = application_id[0].value unless application_id.empty?
+      application_name = manifest_xml.xpath('//application')
+      return application_content if application_name.empty?
+      application_attributes = application_name.first.attributes
+      application_attributes.each_value do |application_attribute|
+        value = application_attribute.value
+        value = bool_conv(value) if value == '0x0' || value == '0xffffffff'
+        application_content[application_attribute.name.to_sym] = value
+      end
       application_content
     end
 
