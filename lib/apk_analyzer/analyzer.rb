@@ -12,8 +12,8 @@ module ApkAnalyzer
     end
 
     def open
-      @manifest_xml = Nokogiri::XML(@apk_xml.parse_xml('Manifest.xml'))
-      puts @manifest_xml
+      @manifest_xml = Nokogiri::XML(@apk_xml.parse_xml('Manifest.xml', true, true))
+      # puts @manifest_xml
     rescue => e
       raise 'Apk is not valid'
     end
