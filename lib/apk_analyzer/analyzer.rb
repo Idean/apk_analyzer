@@ -90,9 +90,9 @@ module ApkAnalyzer
     def collect_application_info(manifest_xml)
       application_content = {}
       application_name = manifest_xml.xpath('//application/@android:name')
-      application_content[:application_name] = application_name
+      application_content[:application_name] = application_name[0].value unless application_name.empty?
       application_id = manifest_xml.xpath('//manifest/@package')
-      application_content[:application_id] = application_id
+      application_content[:application_id] = application_id[0].value unless application_id.empty?
       application_content
     end
 
@@ -113,7 +113,7 @@ module ApkAnalyzer
         end
         intent_attributes[:actions] = actions unless actions.empty?
         intent_attributes[:category] = category unless category.nil?
-        intents.push intent_attributes
+        intents.push intent_attributes unless intent_attributes.empty?
       end
       intents
     end
@@ -133,7 +133,7 @@ module ApkAnalyzer
     end
 
     def bool_conv(value)
-      value == FALSE ? 'false' : 'true'
+      value == FALSE ? false : true
     end
 
     def opengl_version_conv(value)
