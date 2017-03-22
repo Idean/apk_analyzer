@@ -7,7 +7,8 @@ require 'json'
 
 options = {
   apk_path: nil,
-  manifest: false
+  manifest: false,
+  cert_info: true
 }
 
 parser = OptionParser.new do |opts|
@@ -18,12 +19,16 @@ parser = OptionParser.new do |opts|
   opts.on('-m', '--manifest', 'Collects Manifest.xml informations') do
     options[:manifest] = true
   end
+
+  opts.on('-c', '--cert_info', 'Collects Certificate issuer and related dates') do
+    options[:cert_info] = true
+  end
 end
 
 parser.parse!
 raise 'File not specified' if options[:apk_path].nil?
 apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path(options[:apk_path]))
-apk_analyzer.open
 apk_data = {}
 apk_data[:manifest_info] = apk_analyzer.collect_manifest_info if options[:manifest]
+apk_data[:cert_info] =  apk_analyzer.collect_cert_info if options[:cert_info]
 puts JSON.pretty_generate(apk_data)

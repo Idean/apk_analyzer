@@ -1,52 +1,44 @@
 require 'apktools/apkxml'
 require 'nokogiri'
+require 'mkmf'
+
 module ApkAnalyzer
   class Analyzer
     FALSE = '0x0'.freeze
 
     def initialize(apk_path)
       @apk_path = apk_path
+      raise 'File is not a valid apk file' unless valid_zip?(apk_path)
       @apk_xml = ApkXml.new(apk_path)
-    rescue
-      raise 'Apk is not valid'
-    end
-
-    def open
-      @manifest_xml = Nokogiri::XML(@apk_xml.parse_xml('Manifest.xml', true, true))
-      # puts @manifest_xml
-    rescue => e
-      raise 'Apk is not valid'
-    end
-
-    def open?
-      !@manifest_xml.nil?
     end
 
     def collect_manifest_info
-      raise 'Apk is not open' unless open?
+      manifest_file_path = find_file_in_apk('AndroidManifest.xml')
+      raise 'Failed to find Manifest file in apk' if manifest_file_path.nil?
+      manifest_xml = Nokogiri::XML(@apk_xml.parse_xml('AndroidManifest.xml', true, true))
       {}.tap do |manifest_info|
-        manifest_info[:path_in_apk] = find_file_in_apk('AndroidManifest.xml')
+        manifest_info[:path_in_apk] = manifest_file_path
         content = {}
         # application content
-        content[:application_info] = collect_application_info(@manifest_xml)
+        content[:application_info] = collect_application_info(manifest_xml)
 
         # intents
-        content[:intents] = collection_intent_info(@manifest_xml)
+        content[:intents] = collection_intent_info(manifest_xml)
 
         # sdk infos
-        sdk_infos = collect_sdk_info(@manifest_xml)
+        sdk_infos = collect_sdk_info(manifest_xml)
         content[:uses_sdk] = { minimum_sdk_version: sdk_infos[0], target_sdk_version: sdk_infos[1] }
 
         # uses permission
-        uses_permissions = collect_uses_permission_info(@manifest_xml)
+        uses_permissions = collect_uses_permission_info(manifest_xml)
         content[:uses_permissions] = uses_permissions
 
         # uses features
-        feature_list = collect_uses_feature_info(@manifest_xml)
+        feature_list = collect_uses_feature_info(manifest_xml)
         content[:uses_features] = feature_list
 
         # screen compatibility
-        supported_screens = collect_supported_screens(@manifest_xml)
+        supported_screens = collect_supported_screens(manifest_xml)
         content[:supports_screens] = supported_screens
 
         manifest_info[:content] = content
@@ -131,8 +123,75 @@ module ApkAnalyzer
       sdk_infos
     end
 
+    # Certificate info. Issuer and dates
+    def collect_cert_info
+      # raise 'keytool dependency not satisfied. Make sure you have installed keytool command utility' if find_executable('keytool').nil?
+      raise 'keytool dependency not satisfied. Make sure you have installed keytool command utility' if `which keytool` == nil
+      certificate_raw = `keytool -printcert -rfc -jarfile #{@apk_path}`
+      certificate_content_regexp = /(-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----)/m
+
+      cert_info = {
+        issuer_raw: nil,
+        cn: nil,
+        ou: nil,
+        o: nil,
+        st: nil,
+        l: nil,
+        c: nil,
+        creation_date: nil,
+        expiration_date: nil
+      }
+
+      certificate_content = certificate_content_regexp.match(certificate_raw).captures[0]
+      cert_extract_dates(certificate_content, cert_info)
+      cert_extract_issuer(certificate_content, cert_info)
+      cert_info.each do |key, value|
+        cert_info[key] = value.gsub(/\n/,'') unless value.nil?
+      end
+      cert_info
+    end
 
     private
+
+    def cert_extract_issuer(certificate_content, result)
+      subject = `echo "#{certificate_content}" | openssl x509 -noout -in /dev/stdin -subject -nameopt -esc_msb,utf8`
+      result[:issuer_raw] = subject
+      result[:ou] = cert_extract_issuer_parameterized(subject, 'OU')
+      result[:cn] = cert_extract_issuer_parameterized(subject, 'CN')
+      result[:o] = cert_extract_issuer_parameterized(subject, 'O')
+      result[:st] = cert_extract_issuer_parameterized(subject, 'ST')
+      result[:l] = cert_extract_issuer_parameterized(subject, 'L')
+      result[:c] = cert_extract_issuer_parameterized(subject, 'C')
+    end
+
+
+    def cert_extract_dates(certificate_content, result)
+      #collect dates
+      start_date = `echo "#{certificate_content}" | openssl x509 -noout -in /dev/stdin -startdate -nameopt -esc_msb,utf8`
+      end_date = `echo "#{certificate_content}" | openssl x509 -noout -in /dev/stdin -enddate -nameopt -esc_msb,utf8`
+      result[:creation_date] = cert_extract_date(start_date)
+      result[:expiration_date] = cert_extract_date(end_date)
+    end
+
+    def cert_extract_date(date_str)
+      match = /=(.*)$/.match(date_str)
+      match.captures[0]
+    end
+
+    def cert_extract_issuer_parameterized(subject, param)
+      # The following regex was previously used to match fields when not
+      # using '-nameopt -esc_msb,utf8'' switch with openssl
+      # match = %r{\/#{Regexp.quote(param)}=([^\/]*)}.match(subject)
+
+      match = /#{Regexp.quote(param)}=([^=]*)(, [A-Z]+=|$)/.match(subject)
+      return nil if match.nil?
+      match.captures[0]
+    end
+
+    def cert_extract_date(date_str)
+      match = /=(.*)$/.match(date_str)
+      match.captures[0]
+    end
 
     def sanitize_hex(hex)
       hex.to_i(16)
@@ -150,6 +209,15 @@ module ApkAnalyzer
       "Open GL #{value_copy}"
     end
 
+    def valid_zip?(file)
+      zip = Zip::File.open(file)
+      true
+    rescue StandardError
+      false
+    ensure
+      zip.close if zip
+    end
+
     def find_file_in_apk(file_name)
       begin
         file_path_in_apk = nil
@@ -164,7 +232,7 @@ module ApkAnalyzer
           file_path_in_apk = entry.name if entry.name.match(file_name)
           break unless file_path_in_apk.nil?
         end
-        file_path_in_apk.name
+        file_path_in_apk.nil? ? nil : file_path_in_apk.name
       rescue => e
         raise e.message
       ensure
