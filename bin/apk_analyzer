@@ -20,7 +20,7 @@ parser = OptionParser.new do |opts|
     options[:manifest] = true
   end
 
-  opts.on('-c', '--cert_info', 'Collects Certificate issuer and related dates') do
+  opts.on('-c', '--cert-info', 'Collects Certificate issuer and related dates') do
     options[:cert_info] = true
   end
 end
