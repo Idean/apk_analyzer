@@ -142,6 +142,11 @@ module ApkAnalyzer
         expiration_date: nil
       }
 
+      cert_rsa = find_file_in_apk('CERT.RSA')
+      if cert_rsa.nil?
+        puts 'Failed to find certificate file in APK'
+        return {}
+      end
       certificate_content = certificate_content_regexp.match(certificate_raw).captures[0]
       cert_extract_dates(certificate_content, cert_info)
       cert_extract_issuer(certificate_content, cert_info)
