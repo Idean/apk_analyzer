@@ -126,7 +126,6 @@ module ApkAnalyzer
 
     # Certificate info. Issuer and dates
     def collect_cert_info
-      # raise 'keytool dependency not satisfied. Make sure you have installed keytool command utility' if find_executable('keytool').nil?
       raise 'keytool dependency not satisfied. Make sure you have installed keytool command utility' if `which keytool` == nil
       certificate_raw = `keytool -printcert -rfc -jarfile #{@apk_path.shellescape}`
       certificate_content_regexp = /(-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----)/m
