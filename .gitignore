@@ -12,3 +12,5 @@
 \.idea/
 
 *.log
+
+test_binaries\.sh
