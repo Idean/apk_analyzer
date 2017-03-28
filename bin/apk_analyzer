@@ -29,6 +29,16 @@ opts_parser = OptionParser.new do |opts|
   opts.on('-c', '--cert-info', 'Collects Certificate issuer and related dates') do
     options[:cert_info] = true
   end
+
+  opts.on('-a', '--all', 'Collects disponible data on APK') do
+    options[:all] = true
+  end
+
+  opts.on('-h', '--help', 'Print help message') do
+    puts opts_parser
+    puts "\t ex: bin/apk_analyzer -m -c -f [FILE_PATH]"
+    exit 0
+  end
 end
 
 parser.parse!
