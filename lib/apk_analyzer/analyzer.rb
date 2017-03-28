@@ -178,11 +178,6 @@ module ApkAnalyzer
       result[:expiration_date] = cert_extract_date(end_date)
     end
 
-    def cert_extract_date(date_str)
-      match = /=(.*)$/.match(date_str)
-      match.captures[0]
-    end
-
     def cert_extract_issuer_parameterized(subject, param)
       # The following regex was previously used to match fields when not
       # using '-nameopt -esc_msb,utf8'' switch with openssl
