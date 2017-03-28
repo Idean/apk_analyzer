@@ -1,6 +1,7 @@
 require 'apktools/apkxml'
 require 'nokogiri'
 require 'mkmf'
+require 'shellwords'
 
 module ApkAnalyzer
   class Analyzer
@@ -127,7 +128,7 @@ module ApkAnalyzer
     def collect_cert_info
       # raise 'keytool dependency not satisfied. Make sure you have installed keytool command utility' if find_executable('keytool').nil?
       raise 'keytool dependency not satisfied. Make sure you have installed keytool command utility' if `which keytool` == nil
-      certificate_raw = `keytool -printcert -rfc -jarfile #{@apk_path}`
+      certificate_raw = `keytool -printcert -rfc -jarfile #{@apk_path.shellescape}`
       certificate_content_regexp = /(-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----)/m
 
       cert_info = {
