@@ -12,13 +12,13 @@ options = {
   all: false
 }
 
-parser = OptionParser.new do |opts|
-  opts.on('-f', '--file FILE PATH', 'Apk file path') do |file_path|
 apk_data = {
     manifest_info: nil,
     cert_info: nil
 }
 
+opts_parser = OptionParser.new do |opts|
+  opts.on('-f', '--file=FILE_PATH', 'Apk file path') do |file_path|
     options[:apk_path] = file_path
   end
 
