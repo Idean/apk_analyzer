@@ -8,7 +8,8 @@ require 'json'
 options = {
   apk_path: nil,
   manifest: false,
-  cert_info: false
+  cert_info: false,
+  all: false
 }
 
 parser = OptionParser.new do |opts|
