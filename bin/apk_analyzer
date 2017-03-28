@@ -41,10 +41,21 @@ opts_parser = OptionParser.new do |opts|
   end
 end
 
-parser.parse!
+exit_code = 0
+
+opts_parser.parse!
+
 raise 'File not specified' if options[:apk_path].nil?
 apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path(options[:apk_path]))
 apk_data = {}
-apk_data[:manifest_info] = apk_analyzer.collect_manifest_info if options[:manifest]
-apk_data[:cert_info] =  apk_analyzer.collect_cert_info if options[:cert_info]
-puts JSON.pretty_generate(apk_data)
+begin
+  apk_data[:manifest_info] = apk_analyzer.collect_manifest_info if options[:manifest] || options[:all]
+  apk_data[:cert_info] =  apk_analyzer.collect_cert_info if options[:cert_info] || options[:all]
+  puts JSON.pretty_generate(apk_data)
+rescue => e
+  puts e.message
+  puts e.backtrace
+  exit_code = 1
+end
+
+exit exit_code
