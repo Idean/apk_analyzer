@@ -1,4 +1,5 @@
 # Apk Analyzer
+
 The aim of this gem is to extract some data from android apk files. Analysis results are printed in json. It can be used with CLI
 
 ## Installation
@@ -26,6 +27,7 @@ $ gem install apk_analyzer
 1. **CLI Usage**
 
 In a terminal use Apk analyzer like this:
+
 ```shell
     $ apk_analyzer --manifest --cert-info file --file /path/to/apk
 ```
@@ -117,6 +119,7 @@ Script above will collect and print:
       }
     }
 ```
+
 2. **Inside Ruby code**
 
 ```ruby
