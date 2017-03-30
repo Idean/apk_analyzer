@@ -29,7 +29,7 @@ $ gem install apk_analyzer
 In a terminal use Apk analyzer like this:
 
 ```shell
-$ apk_analyzer --manifest --cert-info file --file /path/to/apk
+$ apk_analyzer --manifest --cert-info --file /path/to/apk
 ```
 
 Script above will collect and print:
@@ -141,6 +141,12 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/Backel
 
 * Java keytool: Java and its keytool utility must be installed and set in the PATH on your OS
 * OpenSSL: version 1.0.2g (1 Mar 2016) or greater
+
+## Known issues
+
+Because Apk Analyzer has a dependency on [apkxml](https://github.com/devunwired/apktools) gem, it logs 'Invalid date/time in zip entry' message.
+In fact this is due to rubyzip dependency used by apkxml. This has been fixed on rubyzip library but not on apkxml.
+To avoid this you can redirect errors log for the moment.
 
 ## License
 
