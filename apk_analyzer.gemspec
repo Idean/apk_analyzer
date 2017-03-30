@@ -4,14 +4,15 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'apk_analyzer/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "apk_analyzer"
+  spec.name          = 'apk_analyzer'
   spec.version       = ApkAnalyzer::VERSION
-  spec.authors       = ["Kassang Konzi"]
-  spec.email         = ["kassang.konzi@backelite.com"]
+  spec.authors       = ['Guillem Mazarico', 'Emmanuel Konzi']
+  spec.email         = ['guillem.mazarico@backelite.com','emmanuel.konzi@backelite.com']
 
-  spec.summary       = %q{Android .apk analyzer}
-  spec.description   = %q{The aim of this gem is to extract some data from android apk files. It can be used with CLI}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.summary       = %q{Android apk files analyzer}
+  spec.description   = %q{The aim of this gem is to extract some data from android apk files. Analysis results
+                          are printed in json. It can be used with CLI}
+  spec.homepage      = "https://github.com/Backelite/apk_analyzer"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
@@ -26,8 +27,8 @@ Gem::Specification.new do |spec|
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
   end
-  spec.bindir        = "exe"
-  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  spec.bindir        = "bin"
+  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency 'apktools', '~>0.7.1'
