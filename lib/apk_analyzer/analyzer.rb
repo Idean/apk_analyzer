@@ -93,11 +93,15 @@ module ApkAnalyzer
       cert_info
     end
 
+    private
+
     def collect_supported_screens(manifest_xml)
       supported_screens = []
       screen_types = manifest_xml.xpath('//supports-screens').first
       unless screen_types.nil?
-        screen_types.attributes.each { |attr_name, attr_object| supported_screens.push attr_name unless attr_object.value == FALSE }
+        screen_types.attributes.each do |screen_type, required_param|
+          supported_screens.push screen_type if required_param.value == HEX_TRUE
+        end
       end
       supported_screens
     end
@@ -133,20 +137,26 @@ module ApkAnalyzer
 
     def collect_application_info(manifest_xml)
       application_content = {}
-      application_name = manifest_xml.xpath('//application')
-      return application_content if application_name.empty?
-      application_attributes = application_name.first.attributes
-      application_attributes.each_value do |application_attribute|
-        value = application_attribute.value
-        value = bool_conv(value) if value == '0x0' || value == '0xffffffff'
-        application_content[application_attribute.name.to_sym] = value
+      application_tag = manifest_xml.xpath('//application')
+
+      # Collect all attributes within application tag
+      unless application_tag.empty?
+        application_attributes = application_tag.first.attributes
+        application_attributes.each_value do |attr_key|
+          value = attr_key.value
+          value = bool_conv(value) if is_hex_bool?(value)
+          application_content[attr_key.name.to_sym] = value
+        end
       end
+
+      # Add application id to previous informations
       application_id = manifest_xml.xpath('//manifest/@package')
       application_content[:application_id] = application_id[0].value unless application_id.empty?
+
       application_content
     end
 
-    def collection_intent_info(manifest_xml)
+    def collect_intent_info(manifest_xml)
       intent_filters = manifest_xml.xpath('//intent-filter')
       intents = []
       intent_filters.each do |intent|
@@ -155,10 +165,10 @@ module ApkAnalyzer
         category = nil
         intent.children.each do |child|
           next unless child.is_a?(Nokogiri::XML::Element)
-          if child.name == 'action'
-            actions.push child.attributes['name'].value
-          elsif child.name == 'category'
-            category = child.attributes['name'].value
+          if child.name == ACTION
+            actions.push child.attributes[NAME].value
+          elsif child.name == CATEGORY
+            category = child.attributes[NAME].value
           end
         end
         intent_attributes[:actions] = actions unless actions.empty?
@@ -169,64 +179,22 @@ module ApkAnalyzer
     end
 
     def collect_sdk_info(manifest_xml)
+      sdk_infos = []
       minimum_sdk_version = manifest_xml.xpath('//uses-sdk/@android:minSdkVersion')
       target_sdk_version = manifest_xml.xpath('//uses-sdk/@android:targetSdkVersion')
       sdk_infos = [minimum_sdk_version, target_sdk_version].map { |elt| sanitize_hex(elt.first.value) unless elt.empty? }
       sdk_infos
     end
 
-    # Certificate info. Issuer and dates
-    def collect_cert_info
-      raise 'keytool dependency not satisfied. Make sure you have installed keytool command utility' if `which keytool` == nil
-      certificate_raw = `keytool -printcert -rfc -jarfile #{@apk_path.shellescape}`
-      certificate_content_regexp = /(-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----)/m
-
-      cert_info = {
-        issuer_raw: nil,
-        cn: nil,
-        ou: nil,
-        o: nil,
-        st: nil,
-        l: nil,
-        c: nil,
-        creation_date: nil,
-        expiration_date: nil
-      }
-
-      cert_rsa = find_file_in_apk('CERT.RSA')
-      if cert_rsa.nil?
-        puts 'Failed to find certificate file in APK'
-        return {}
-      end
-      certificate_content = certificate_content_regexp.match(certificate_raw).captures[0]
-      cert_extract_dates(certificate_content, cert_info)
-      cert_extract_issuer(certificate_content, cert_info)
-      cert_info.each do |key, value|
-        cert_info[key] = value.gsub(/\n/,'') unless value.nil?
-      end
-      cert_info
-    end
-
-    private
-
     def cert_extract_issuer(certificate_content, result)
       subject = `echo "#{certificate_content}" | openssl x509 -noout -in /dev/stdin -subject -nameopt -esc_msb,utf8`
-      result[:issuer_raw] = subject
+      result[:issuer_raw] = subject.gsub(/\n/,'')
+      result[:cn] = cert_extract_issuer_parameterized(subject, 'CN').gsub(/\n/,'')
       result[:ou] = cert_extract_issuer_parameterized(subject, 'OU')
-      result[:cn] = cert_extract_issuer_parameterized(subject, 'CN')
       result[:o] = cert_extract_issuer_parameterized(subject, 'O')
       result[:st] = cert_extract_issuer_parameterized(subject, 'ST')
       result[:l] = cert_extract_issuer_parameterized(subject, 'L')
       result[:c] = cert_extract_issuer_parameterized(subject, 'C')
-    end
-
-
-    def cert_extract_dates(certificate_content, result)
-      #collect dates
-      start_date = `echo "#{certificate_content}" | openssl x509 -noout -in /dev/stdin -startdate -nameopt -esc_msb,utf8`
-      end_date = `echo "#{certificate_content}" | openssl x509 -noout -in /dev/stdin -enddate -nameopt -esc_msb,utf8`
-      result[:creation_date] = cert_extract_date(start_date)
-      result[:expiration_date] = cert_extract_date(end_date)
     end
 
     def cert_extract_issuer_parameterized(subject, param)
@@ -239,6 +207,14 @@ module ApkAnalyzer
       match.captures[0]
     end
 
+    def cert_extract_dates(certificate_content, result)
+      #collect dates
+      start_date = `echo "#{certificate_content}" | openssl x509 -noout -in /dev/stdin -startdate -nameopt -esc_msb,utf8`
+      end_date = `echo "#{certificate_content}" | openssl x509 -noout -in /dev/stdin -enddate -nameopt -esc_msb,utf8`
+      result[:creation_date] = cert_extract_date(start_date)
+      result[:expiration_date] = cert_extract_date(end_date)
+    end
+
     def cert_extract_date(date_str)
       match = /=(.*)$/.match(date_str)
       match.captures[0]
@@ -248,8 +224,14 @@ module ApkAnalyzer
       hex.to_i(16)
     end
 
+    # hex strings come come from apktools/apkxml.
+    # It converts true to 0xffffffff and false to 0x0
     def bool_conv(value)
-      value == FALSE ? false : true
+      value == HEX_FALSE ? false : true
+    end
+
+    def is_hex_bool?(hex_string)
+      hex_string == HEX_TRUE || hex_string == HEX_FALSE
     end
 
     def opengl_version_conv(value)
@@ -285,11 +267,15 @@ module ApkAnalyzer
         end
         file_path_in_apk.nil? ? nil : file_path_in_apk
       rescue => e
-        puts e.backtrace
-        raise e.message
+        log_expection e
       ensure
         apk_zipfile.close
       end
+    end
+
+    def log_expection e
+      puts e.message
+      puts e.backtrace
     end
   end
 end
