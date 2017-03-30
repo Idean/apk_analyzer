@@ -29,7 +29,7 @@ $ gem install apk_analyzer
 In a terminal use Apk analyzer like this:
 
 ```shell
-    $ apk_analyzer --manifest --cert-info file --file /path/to/apk
+$ apk_analyzer --manifest --cert-info file --file /path/to/apk
 ```
 
 Script above will collect and print:
@@ -38,99 +38,99 @@ Script above will collect and print:
 
 **Result**
 ```json
-    {
-      "manifest_info": {
-        "path_in_apk": "AndroidManifest.xml",
-        "content": {
-          "application_info": {
-            "theme": "13",
-            "label": "E.app.label",
-            "icon": "@drawable/ic_launcher",
-            "name": "com.package.xxxx.xxxx",
-            "debuggable": true,
-            "allowBackup": true,
-            "hardwareAccelerated": true,
-            "application_id": "com.xxxxxxx.xxxx.xxx"
-          },
-          "intents": [
-            {
-              "actions": [
-                "android.intent.action.MAIN"
-              ],
-              "category": "android.intent.category.LAUNCHER"
-            },
-            {
-              "actions": [
-                "com.android.vending.INSTALL_REFERRER"
-              ]
-            },
-            {
-              "actions": [
-                "com.google.android.c2dm.intent.RECEIVE",
-                "com.google.android.c2dm.intent.REGISTRATION"
-              ],
-              "category": "com.xxxxxx.xxx.rec"
-            },
-            {
-              "actions": [
-                "com.google.firebase.INSTANCE_ID_EVENT"
-              ]
-            }
+{
+  "manifest_info": {
+    "path_in_apk": "AndroidManifest.xml",
+    "content": {
+      "application_info": {
+        "theme": "13",
+        "label": "E.app.label",
+        "icon": "@drawable/ic_launcher",
+        "name": "com.package.xxxx.xxxx",
+        "debuggable": true,
+        "allowBackup": true,
+        "hardwareAccelerated": true,
+        "application_id": "com.xxxxxxx.xxxx.xxx"
+      },
+      "intents": [
+        {
+          "actions": [
+            "android.intent.action.MAIN"
           ],
-          "uses_sdk": {
-            "minimum_sdk_version": 14,
-            "target_sdk_version": 23
-          },
-          "uses_permissions": [
-            "android.permission.INTERNET",
-            "android.permission.CAMERA",
-            "android.permission.WRITE_EXTERNAL_STORAGE",
-            "android.permission.READ_EXTERNAL_STORAGE",
-            "android.permission.VIBRATE",
-            "com.google.android.c2dm.permission.RECEIVE",
-            "android.permission.ACCESS_NETWORK_STATE",
-            "android.permission.WAKE_LOCK",
-            "com.modulotech.xxxxxxx.xxxx.permission.C2D_MESSAGE"
+          "category": "android.intent.category.LAUNCHER"
+        },
+        {
+          "actions": [
+            "com.android.vending.INSTALL_REFERRER"
+          ]
+        },
+        {
+          "actions": [
+            "com.google.android.c2dm.intent.RECEIVE",
+            "com.google.android.c2dm.intent.REGISTRATION"
           ],
-          "uses_features": [
-            {
-              "name": "android.hardware.camera",
-              "required": true
-            }
-          ],
-          "supports_screens": [
-            "anyDensity",
-            "normalScreens",
-            "largeScreens",
-            "xlargeScreens"
+          "category": "com.xxxxxx.xxx.rec"
+        },
+        {
+          "actions": [
+            "com.google.firebase.INSTANCE_ID_EVENT"
           ]
         }
+      ],
+      "uses_sdk": {
+        "minimum_sdk_version": 14,
+        "target_sdk_version": 23
       },
-      "cert_info": {
-        "issuer_raw": "subject= C=US, O=Android, CN=Android Debug",
-        "cn": "Android Debug",
-        "ou": null,
-        "o": "Android",
-        "st": null,
-        "l": null,
-        "c": "US",
-        "creation_date": "Sep 15 07:06:03 2011 GMT",
-        "expiration_date": "Sep  7 07:06:03 2041 GMT"
-      }
+      "uses_permissions": [
+        "android.permission.INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.VIBRATE",
+        "com.google.android.c2dm.permission.RECEIVE",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.WAKE_LOCK",
+        "com.modulotech.xxxxxxx.xxxx.permission.C2D_MESSAGE"
+      ],
+      "uses_features": [
+        {
+          "name": "android.hardware.camera",
+          "required": true
+        }
+      ],
+      "supports_screens": [
+        "anyDensity",
+        "normalScreens",
+        "largeScreens",
+        "xlargeScreens"
+      ]
     }
+  },
+  "cert_info": {
+    "issuer_raw": "subject= C=US, O=Android, CN=Android Debug",
+    "cn": "Android Debug",
+    "ou": null,
+    "o": "Android",
+    "st": null,
+    "l": null,
+    "c": "US",
+    "creation_date": "Sep 15 07:06:03 2011 GMT",
+    "expiration_date": "Sep  7 07:06:03 2041 GMT"
+  }
+}
 ```
 
 2. **Inside Ruby code**
 
 ```ruby
-    require 'apk_analyzer'
-    
-    # Instantiate analyzer
-    apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path('path/to/apk'))
-    
-    # Then collect data you want
-    manifest_info = apk_analyzer.collect_manifest_info
-    certificate_info = apk_analyzer.collect_cert_info
+require 'apk_analyzer'
+
+# Instantiate analyzer
+apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path('path/to/apk'))
+
+# Then collect data
+manifest_info = apk_analyzer.collect_manifest_info
+certificate_info = apk_analyzer.collect_cert_info
 ```
 
 ## Contributing
