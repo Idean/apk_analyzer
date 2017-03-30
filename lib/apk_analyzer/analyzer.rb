@@ -59,8 +59,8 @@ module ApkAnalyzer
 
         manifest_info[:content] = content
       rescue => e
-        puts "Invalid xml found"
         log_expection e
+        raise "Invalid xml found"
       end
       manifest_info
     end
