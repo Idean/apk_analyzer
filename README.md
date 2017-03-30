@@ -1,4 +1,4 @@
-# ApkAnalyzer
+# Apk Analyzer
 
 Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/apk_analyzer`. To experiment with that code, run `bin/console` for an interactive prompt.
 
@@ -14,7 +14,9 @@ gem 'apk_analyzer'
 
 And then execute:
 
+```shell
     $ bundle
+```
 
 Or install it yourself as:
 
@@ -23,19 +25,123 @@ Or install it yourself as:
 ## Usage
 
 TODO: Write usage instructions here
+1. **CLI Usage**
 
-## Development
+In a terminal use Apk analyzer like this:
+```shell
+    $ apk_analyzer --manifest --cert-info file --file /path/to/apk
+```
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Script above will collect and print:
+* Android manifest informations
+* Apk certificate informations if it have been signed
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+
+**Result**
+```json
+    {
+      "manifest_info": {
+        "path_in_apk": "AndroidManifest.xml",
+        "content": {
+          "application_info": {
+            "theme": "13",
+            "label": "E.app.label",
+            "icon": "@drawable/ic_launcher",
+            "name": "com.package.xxxx.xxxx",
+            "debuggable": true,
+            "allowBackup": true,
+            "hardwareAccelerated": true,
+            "application_id": "com.xxxxxxx.xxxx.xxx"
+          },
+          "intents": [
+            {
+              "actions": [
+                "android.intent.action.MAIN"
+              ],
+              "category": "android.intent.category.LAUNCHER"
+            },
+            {
+              "actions": [
+                "com.android.vending.INSTALL_REFERRER"
+              ]
+            },
+            {
+              "actions": [
+                "com.google.android.c2dm.intent.RECEIVE",
+                "com.google.android.c2dm.intent.REGISTRATION"
+              ],
+              "category": "com.xxxxxx.xxx.rec"
+            },
+            {
+              "actions": [
+                "com.google.firebase.INSTANCE_ID_EVENT"
+              ]
+            }
+          ],
+          "uses_sdk": {
+            "minimum_sdk_version": 14,
+            "target_sdk_version": 23
+          },
+          "uses_permissions": [
+            "android.permission.INTERNET",
+            "android.permission.CAMERA",
+            "android.permission.WRITE_EXTERNAL_STORAGE",
+            "android.permission.READ_EXTERNAL_STORAGE",
+            "android.permission.VIBRATE",
+            "com.google.android.c2dm.permission.RECEIVE",
+            "android.permission.ACCESS_NETWORK_STATE",
+            "android.permission.WAKE_LOCK",
+            "com.modulotech.xxxxxxx.xxxx.permission.C2D_MESSAGE"
+          ],
+          "uses_features": [
+            {
+              "name": "android.hardware.camera",
+              "required": true
+            }
+          ],
+          "supports_screens": [
+            "anyDensity",
+            "normalScreens",
+            "largeScreens",
+            "xlargeScreens"
+          ]
+        }
+      },
+      "cert_info": {
+        "issuer_raw": "subject= C=US, O=Android, CN=Android Debug",
+        "cn": "Android Debug",
+        "ou": null,
+        "o": "Android",
+        "st": null,
+        "l": null,
+        "c": "US",
+        "creation_date": "Sep 15 07:06:03 2011 GMT",
+        "expiration_date": "Sep  7 07:06:03 2041 GMT"
+      }
+    }
+```
+2. **Inside Ruby code**
+
+```ruby
+    require 'apk_analyzer'
+    
+    # Instantiate analyzer
+    apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path('path/to/apk'))
+    
+    # Then collect data you want
+    manifest_info = apk_analyzer.collect_manifest_info
+    certificate_info = apk_analyzer.collect_cert_info
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/Kassang Konzi/apk_analyzer.
+Bug reports and pull requests are welcome on GitHub at https://github.com/Backelite/apk_analyzer.
 
+## Requirements
+
+* Java keytool: Java and its keytool utility must be installed and set in the PATH on your OS
+* OpenSSL: version 1.0.2g (1 Mar 2016) or greater
 
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
-
