@@ -5,7 +5,15 @@ require 'shellwords'
 
 module ApkAnalyzer
   class Analyzer
-    FALSE = '0x0'.freeze
+    HEX_FALSE = '0x0'.freeze
+    HEX_TRUE = '0xffffffff'.freeze
+    REQUIRED = 'required'.freeze
+    GL_ES_VERSION = 'glEsVersion'
+    NAME = 'name'
+    ACTION = 'action'
+    CATEGORY = 'category'
+    ANDROID_MANIFEST_FILE = 'AndroidManifest.xml'
+
 
     def initialize(apk_path)
       @apk_path = apk_path
@@ -14,17 +22,24 @@ module ApkAnalyzer
     end
 
     def collect_manifest_info
-      manifest_file_path = find_file_in_apk('AndroidManifest.xml')
+      manifest_file_path = find_file_in_apk(ANDROID_MANIFEST_FILE)
       raise 'Failed to find Manifest file in apk' if manifest_file_path.nil?
-      manifest_xml = Nokogiri::XML(@apk_xml.parse_xml('AndroidManifest.xml', true, true))
-      {}.tap do |manifest_info|
+      begin
+        manifest_xml = Nokogiri::XML(@apk_xml.parse_xml('AndroidManifest.xml', true, true))
+      rescue => e
+        puts "Failed to parse #{ANDROID_MANIFEST_FILE}"
+        log_expection e
+      end
+
+      manifest_info = {}
+      begin
         manifest_info[:path_in_apk] = manifest_file_path
         content = {}
         # application content
         content[:application_info] = collect_application_info(manifest_xml)
 
         # intents
-        content[:intents] = collection_intent_info(manifest_xml)
+        content[:intents] = collect_intent_info(manifest_xml)
 
         # sdk infos
         sdk_infos = collect_sdk_info(manifest_xml)
@@ -43,7 +58,39 @@ module ApkAnalyzer
         content[:supports_screens] = supported_screens
 
         manifest_info[:content] = content
+      rescue => e
+        puts "Invalid xml found"
+        log_expection e
       end
+      manifest_info
+    end
+    
+    # Certificate info. Issuer and dates
+    def collect_cert_info
+      raise 'keytool dependency not satisfied. Make sure that JAVA keytool utility is installed' if `which keytool` == ''
+      cert_info = {}
+      certificate_raw = `keytool -printcert -rfc -jarfile #{@apk_path.shellescape}`
+      certificate_content_regexp = /(-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----)/m
+      matched_data = certificate_content_regexp.match(certificate_raw)
+      if matched_data
+        certificate_content = matched_data.captures[0]
+        cert_info = {
+            issuer_raw: nil,
+            cn: nil,
+            ou: nil,
+            o: nil,
+            st: nil,
+            l: nil,
+            c: nil,
+            creation_date: nil,
+            expiration_date: nil
+        }
+        cert_extract_dates(certificate_content, cert_info)
+        cert_extract_issuer(certificate_content, cert_info)
+      else
+        puts 'Failed to find CERT.RSA file in APK'
+      end
+      cert_info
     end
 
     def collect_supported_screens(manifest_xml)
@@ -61,13 +108,17 @@ module ApkAnalyzer
       features.each do  |feature|
         feature_element = {}
         feature.attributes.each_value do |attr|
-          value = attr.value
-          value = bool_conv(value) if attr.name == 'required'
-          if attr.name == 'glEsVersion'
-            feature_element[:name] = opengl_version_conv(attr.value)
-          else
-            feature_element[attr.name.to_sym] = value
+          feature_attr_key = attr.name
+          feature_attr_value = attr.value
+
+          if attr.name == REQUIRED
+            feature_attr_value = bool_conv(feature_attr_value)
+          elsif attr.name == GL_ES_VERSION
+            feature_attr_key = NAME
+            feature_attr_value = opengl_version_conv(attr.value)
           end
+
+          feature_element[feature_attr_key.to_sym] = feature_attr_value
         end
         feature_list.push feature_element
       end
