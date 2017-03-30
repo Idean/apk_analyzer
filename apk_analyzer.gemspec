@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.name          = 'apk_analyzer'
   spec.version       = ApkAnalyzer::VERSION
   spec.authors       = ['Guillem Mazarico', 'Emmanuel Konzi']
-  spec.email         = ['guillem.mazarico@backelite.com','emmanuel.konzi@backelite.com']
+  spec.email         = %w(guillem.mazarico@backelite.com emmanuel.konzi@backelite.com)
 
   spec.summary       = %q{Android apk files analyzer}
   spec.description   = %q{The aim of this gem is to extract some data from android apk files. Analysis results
