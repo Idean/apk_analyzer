@@ -12,8 +12,8 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{Android apk files analyzer}
   spec.description   = %q{The aim of this gem is to extract some data from android apk files. Analysis results
                           are printed in json. It can be used with CLI}
-  spec.homepage      = "https://github.com/Backelite/apk_analyzer"
-  spec.license       = "MIT"
+  spec.homepage      = 'https://github.com/Backelite/apk_analyzer'
+  spec.license       = 'MIT'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
