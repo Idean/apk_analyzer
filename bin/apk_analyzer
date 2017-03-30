@@ -22,19 +22,19 @@ opts_parser = OptionParser.new do |opts|
     options[:apk_path] = file_path
   end
 
-  opts.on('-m', '--manifest', 'Collects Manifest.xml informations') do
+  opts.on('-m', '--manifest', 'Prints Manifest.xml information') do
     options[:manifest] = true
   end
 
-  opts.on('-c', '--cert-info', 'Collects Certificate issuer and related dates') do
+  opts.on('-c', '--cert-info', 'Prints Certificate issuer and related dates') do
     options[:cert_info] = true
   end
 
-  opts.on('-a', '--all', 'Collects disponible data on APK') do
+  opts.on('-a', '--all', 'Prints available data on APK') do
     options[:all] = true
   end
 
-  opts.on('-h', '--help', 'Print help message') do
+  opts.on('-h', '--help', 'Prints help message') do
     puts opts_parser
     puts "\t ex: bin/apk_analyzer -m -c -f [FILE_PATH]"
     exit 0
