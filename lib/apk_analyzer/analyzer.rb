@@ -243,6 +243,7 @@ module ApkAnalyzer
     end
 
     def valid_zip?(file)
+      Zip.warn_invalid_date = false
       zip = Zip::File.open(file)
       true
     rescue StandardError
@@ -254,6 +255,7 @@ module ApkAnalyzer
     def find_file_in_apk(file_name)
       begin
         file_path_in_apk = nil
+        Zip.warn_invalid_date = false
         apk_zipfile = Zip::File.open(@apk_path)
 
         # Search at the root
