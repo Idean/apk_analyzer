@@ -144,9 +144,9 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/Backel
 
 ## Known issues
 
-Because Apk Analyzer has a dependency on [apkxml](https://github.com/devunwired/apktools) gem, it logs 'Invalid date/time in zip entry' message.
-In fact this is due to rubyzip dependency used by apkxml. This has been fixed on rubyzip library but not on apkxml.
-To avoid this you can redirect errors log for the moment.
+To avoid rubyzip 'Invalid date/time in zip entry' message logged by rubzip dependency on [apktools](https://github.com/devunwired/apktools) gem we updated it in our gem and set
+warn_invalid_date to false.
+A [pull request](https://github.com/devunwired/apktools/pull/20) is pending to correct this on apkxml gem too.
 
 ## License
 

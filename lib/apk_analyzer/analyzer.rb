@@ -1,6 +1,5 @@
 require 'apktools/apkxml'
 require 'nokogiri'
-require 'mkmf'
 require 'shellwords'
 
 module ApkAnalyzer
@@ -16,6 +15,8 @@ module ApkAnalyzer
 
 
     def initialize(apk_path)
+      # Deactivating invalid date warnings in zip for apktools gem and apk analyzer code
+      Zip.warn_invalid_date = false
       @apk_path = apk_path
       raise 'File is not a valid apk file' unless valid_zip?(apk_path)
       @apk_xml = ApkXml.new(apk_path)
@@ -243,7 +244,6 @@ module ApkAnalyzer
     end
 
     def valid_zip?(file)
-      Zip.warn_invalid_date = false
       zip = Zip::File.open(file)
       true
     rescue StandardError
@@ -255,7 +255,6 @@ module ApkAnalyzer
     def find_file_in_apk(file_name)
       begin
         file_path_in_apk = nil
-        Zip.warn_invalid_date = false
         apk_zipfile = Zip::File.open(@apk_path)
 
         # Search at the root
