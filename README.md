@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Backelite/apk_analyzer.svg?branch=master)](https://travis-ci.org/Backelite/apk_analyzer)
+
 # Apk Analyzer
 
 The aim of this gem is to extract some data from android apk files. Analysis results are printed in json. It can be used with CLI
