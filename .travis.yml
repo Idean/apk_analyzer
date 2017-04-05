@@ -3,3 +3,4 @@ language: ruby
 rvm:
   - 2.2.5
 before_install: gem install bundler -v 1.14.4
+script: rake build
