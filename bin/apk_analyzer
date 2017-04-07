@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.push File.expand_path('../../lib', __FILE__)
+require 'apk_analyzer'
+require 'optparse'
+require 'json'
+
+options = {
+  apk_path: nil,
+  manifest: false,
+  cert_info: false,
+  all: false
+}
+
+apk_data = {
+    manifest_info: nil,
+    cert_info: nil
+}
+
+opts_parser = OptionParser.new do |opts|
+  opts.on('-f', '--file=FILE_PATH', 'Apk file path') do |file_path|
+    options[:apk_path] = file_path
+  end
+
+  opts.on('-m', '--manifest', 'Prints Manifest.xml information') do
+    options[:manifest] = true
+  end
+
+  opts.on('-c', '--cert-info', 'Prints Certificate issuer and related dates') do
+    options[:cert_info] = true
+  end
+
+  opts.on('-a', '--all', 'Prints available data on APK') do
+    options[:all] = true
+  end
+
+  opts.on('-h', '--help', 'Prints help message') do
+    puts opts_parser
+    puts "\t ex: bin/apk_analyzer -m -c -f [FILE_PATH]"
+    exit 0
+  end
+end
+
+exit_code = 0
+
+opts_parser.parse!
+
+raise 'File not specified' if options[:apk_path].nil?
+apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path(options[:apk_path]))
+apk_data = {}
+begin
+  apk_data[:manifest_info] = apk_analyzer.collect_manifest_info if options[:manifest] || options[:all]
+  apk_data[:cert_info] =  apk_analyzer.collect_cert_info if options[:cert_info] || options[:all]
+  puts JSON.pretty_generate(apk_data)
+rescue => e
+  puts e.message
+  puts e.backtrace
+  exit_code = 1
+end
+
+exit exit_code
