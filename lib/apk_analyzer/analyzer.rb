@@ -68,7 +68,8 @@ module ApkAnalyzer
     
     # Certificate info. Issuer and dates
     def collect_cert_info
-      raise 'keytool dependency not satisfied. Make sure that JAVA keytool utility is installed' if `which keytool` == ''
+      os_has_keytool = system('keytool')
+      raise 'keytool dependency not satisfied. Make sure that JAVA keytool utility is installed' unless os_has_keytool
       cert_info = {}
       certificate_raw = `keytool -printcert -rfc -jarfile #{@apk_path.shellescape}`
       certificate_content_regexp = /(-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----)/m
