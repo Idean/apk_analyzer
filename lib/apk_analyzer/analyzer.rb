@@ -191,13 +191,16 @@ module ApkAnalyzer
 
     def cert_extract_issuer(certificate_content, result)
       subject = `echo "#{certificate_content}" | openssl x509 -noout -in /dev/stdin -subject -nameopt -esc_msb,utf8`
-      result[:issuer_raw] = subject.gsub(/\n/,'')
-      result[:cn] = cert_extract_issuer_parameterized(subject, 'CN').gsub(/\n/,'')
-      result[:ou] = cert_extract_issuer_parameterized(subject, 'OU')
-      result[:o] = cert_extract_issuer_parameterized(subject, 'O')
-      result[:st] = cert_extract_issuer_parameterized(subject, 'ST')
-      result[:l] = cert_extract_issuer_parameterized(subject, 'L')
-      result[:c] = cert_extract_issuer_parameterized(subject, 'C')
+      # All APK certificate fields are not manadatory. At least one is needed.So to remove trailing carrier return
+      # character, we apply gsub method on the raw subject, and we use it after.
+      raw = subject.gsub(/\n/,'')
+      result[:issuer_raw] = raw
+      result[:cn] = cert_extract_issuer_parameterized(raw, 'CN')
+      result[:ou] = cert_extract_issuer_parameterized(raw, 'OU')
+      result[:o] = cert_extract_issuer_parameterized(raw, 'O')
+      result[:st] = cert_extract_issuer_parameterized(raw, 'ST')
+      result[:l] = cert_extract_issuer_parameterized(raw, 'L')
+      result[:c] = cert_extract_issuer_parameterized(raw, 'C')
     end
 
     def cert_extract_issuer_parameterized(subject, param)
