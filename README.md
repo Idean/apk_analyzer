@@ -2,7 +2,7 @@
 
 # Apk Analyzer
 
-The aim of this gem is to extract some data from android apk files. Analysis results are printed in json. It can be used with CLI
+The aim of this gem is to extract some data from android apk or aab files. Analysis results are printed in json. It can be used with CLI
 
 ## Installation
 
@@ -31,18 +31,18 @@ $ gem install apk_analyzer
 In a terminal use Apk analyzer like this:
 
 ```shell
-$ apk_analyzer --manifest --cert-info --file /path/to/apk
+$ apk_analyzer --manifest --cert-info --file /path/to/file
 ```
 
 Script above will collect and print:
 * Android manifest informations
-* Apk certificate informations if it have been signed
+* Certificate informations if it have been signed
 
 **Result**
 ```json
 {
   "manifest_info": {
-    "path_in_apk": "AndroidManifest.xml",
+    "path": "AndroidManifest.xml",
     "content": {
       "application_info": {
         "theme": "13",
@@ -128,7 +128,7 @@ Script above will collect and print:
 require 'apk_analyzer'
 
 # Instantiate analyzer
-apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path('path/to/apk'))
+apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path('path/to/file'))
 
 # Then collect data
 manifest_info = apk_analyzer.collect_manifest_info

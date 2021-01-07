@@ -6,7 +6,7 @@ require 'optparse'
 require 'json'
 
 options = {
-  apk_path: nil,
+  file_path: nil,
   manifest: false,
   cert_info: false,
   all: false
@@ -18,8 +18,8 @@ apk_data = {
 }
 
 opts_parser = OptionParser.new do |opts|
-  opts.on('-f', '--file=FILE_PATH', 'Apk file path') do |file_path|
-    options[:apk_path] = file_path
+  opts.on('-f', '--file=FILE_PATH', 'File path') do |file_path|
+    options[:file_path] = file_path
   end
 
   opts.on('-m', '--manifest', 'Prints Manifest.xml information') do
@@ -30,7 +30,7 @@ opts_parser = OptionParser.new do |opts|
     options[:cert_info] = true
   end
 
-  opts.on('-a', '--all', 'Prints available data on APK') do
+  opts.on('-a', '--all', 'Prints available data') do
     options[:all] = true
   end
 
@@ -45,8 +45,8 @@ exit_code = 0
 
 opts_parser.parse!
 
-raise 'File not specified' if options[:apk_path].nil?
-apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path(options[:apk_path]))
+raise 'File not specified' if options[:file_path].nil?
+apk_analyzer = ApkAnalyzer::Analyzer.new(File.expand_path(options[:file_path]))
 apk_data = {}
 begin
   apk_data[:manifest_info] = apk_analyzer.collect_manifest_info if options[:manifest] || options[:all]
