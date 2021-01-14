@@ -23,7 +23,9 @@ module ApkAnalyzer
       when ".apk"
         @manifest = ApkXml.new(file_path).parse_xml('AndroidManifest.xml', true, true)
       when ".aab"
-        cmd = "java -jar bundletool-all-1.4.0.jar dump manifest --bundle #{file_path}"
+        String bundle_tool_location = %x[ #{"which bundletool"} ]
+        raise 'Bundletool is not installed & available in your path' if bundle_tool_location.nil? or bundle_tool_location.length == 0
+        cmd = "bundletool dump manifest --bundle #{file_path}"
         @manifest = %x[ #{cmd} ]
       else
         raise 'unknown platform technology'
