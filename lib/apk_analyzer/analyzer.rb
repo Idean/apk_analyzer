@@ -14,19 +14,29 @@ module ApkAnalyzer
     ANDROID_MANIFEST_FILE = 'AndroidManifest.xml'
 
 
-    def initialize(apk_path)
+    def initialize(file_path)
       # Deactivating invalid date warnings in zip for apktools gem and apk analyzer code
       Zip.warn_invalid_date = false
-      @apk_path = apk_path
-      raise 'File is not a valid apk file' unless valid_zip?(apk_path)
-      @apk_xml = ApkXml.new(apk_path)
+      @file_path = file_path
+      raise 'File is not a valid file' unless valid_zip?(file_path)
+      case File.extname(file_path)
+      when ".apk"
+        @manifest = ApkXml.new(file_path).parse_xml('AndroidManifest.xml', true, true)
+      when ".aab"
+        String bundle_tool_location = %x[ #{"which bundletool"} ]
+        raise 'Bundletool is not installed & available in your path' if bundle_tool_location.nil? or bundle_tool_location.length == 0
+        cmd = "bundletool dump manifest --bundle #{file_path}"
+        @manifest = %x[ #{cmd} ]
+      else
+        raise 'unknown platform technology'
+      end
     end
 
     def collect_manifest_info
-      manifest_file_path = find_file_in_apk(ANDROID_MANIFEST_FILE)
-      raise 'Failed to find Manifest file in apk' if manifest_file_path.nil?
+      manifest_file_path = find_file(ANDROID_MANIFEST_FILE)
+      raise 'Failed to find Manifest file' if manifest_file_path.nil?
       begin
-        manifest_xml = Nokogiri::XML(@apk_xml.parse_xml('AndroidManifest.xml', true, true))
+        manifest_xml = Nokogiri::XML(@manifest)
       rescue => e
         puts "Failed to parse #{ANDROID_MANIFEST_FILE}"
         log_expection e
@@ -34,7 +44,7 @@ module ApkAnalyzer
 
       manifest_info = {}
       begin
-        manifest_info[:path_in_apk] = manifest_file_path
+        manifest_info[:path] = manifest_file_path
         content = {}
         # application content
         content[:application_info] = collect_application_info(manifest_xml)
@@ -72,7 +82,7 @@ module ApkAnalyzer
       os_has_keytool = system('keytool 2>/dev/null')
       raise 'keytool dependency not satisfied. Make sure that JAVA keytool utility is installed' unless os_has_keytool
       cert_info = {}
-      certificate_raw = `keytool -printcert -rfc -jarfile #{@apk_path.shellescape}`
+      certificate_raw = `keytool -printcert -rfc -jarfile #{@file_path.shellescape}`
       certificate_content_regexp = /(-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----)/m
       matched_data = certificate_content_regexp.match(certificate_raw)
       if matched_data
@@ -91,7 +101,7 @@ module ApkAnalyzer
         cert_extract_dates(certificate_content, cert_info)
         cert_extract_issuer(certificate_content, cert_info)
       else
-        puts 'Failed to find CERT.RSA file in APK'
+        puts 'Failed to find CERT.RSA file'
       end
       cert_info
     end
@@ -190,8 +200,9 @@ module ApkAnalyzer
     end
 
     def cert_extract_issuer(certificate_content, result)
+      print(certificate_content)
       subject = `echo "#{certificate_content}" | openssl x509 -noout -in /dev/stdin -subject -nameopt -esc_msb,utf8`
-      # All APK certificate fields are not manadatory. At least one is needed.So to remove trailing carrier return
+      # All certificate fields are not manadatory. At least one is needed.So to remove trailing carrier return
       # character, we apply gsub method on the raw subject, and we use it after.
       raw = subject.gsub(/\n/,'')
       result[:issuer_raw] = raw
@@ -257,25 +268,24 @@ module ApkAnalyzer
       zip.close if zip
     end
 
-    def find_file_in_apk(file_name)
+    def find_file(file_name)
       begin
-        file_path_in_apk = nil
-        apk_zipfile = Zip::File.open(@apk_path)
+        zipfile = Zip::File.open(@file_path)
 
         # Search at the root
-        file_path_in_apk = apk_zipfile.find_entry(file_name)
-        return file_path_in_apk.name unless file_path_in_apk.nil?
+        file_path = zipfile.find_entry(file_name)
+        return file_path.name unless file_path.nil?
 
         # Search deeply
-        apk_zipfile.each do |entry|
-          file_path_in_apk = entry.name if entry.name.match(file_name)
-          break unless file_path_in_apk.nil?
+        zipfile.each do |entry|
+          file_path = entry.name if entry.name.match(file_name)
+          break unless file_path.nil?
         end
-        file_path_in_apk.nil? ? nil : file_path_in_apk
+        file_path.nil? ? nil : file_path
       rescue => e
         log_expection e
       ensure
-        apk_zipfile.close
+        zipfile.close
       end
     end
 
